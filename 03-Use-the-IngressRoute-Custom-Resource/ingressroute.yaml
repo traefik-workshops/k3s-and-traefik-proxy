@@ -1,0 +1,23 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard-secure
+spec:
+  entryPoints:
+  - web
+  routes:
+  - kind: Rule
+    match: Host("dashboard.traefik.10.68.0.70.sslip.io")
+    services:
+    - name: traefik-dashboard
+      port: 9000
+    middlewares:
+    - name: dashboard-auth
+    - name: dashboard-rewrite
+  - kind: Rule
+    match: Host("dashboard.traefik.10.68.0.70.sslip.io") && PathPrefix("/api")
+    services:
+    - name: traefik-dashboard
+      port: 9000
+    middlewares:
+    - name: dashboard-auth
