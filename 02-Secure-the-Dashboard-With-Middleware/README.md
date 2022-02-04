@@ -1,4 +1,4 @@
-# Secure the Dashboard with Authentication
+# Secure the Dashboard with Middleware
 
 ## Prerequisites
 
