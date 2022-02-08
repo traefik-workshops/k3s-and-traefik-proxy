@@ -39,7 +39,7 @@ Adding password for user admin@example.com
 ### Create the `dashboard-users` Secret from the `users` file
 
 ```bash
-k create secret generic dashboard-users --from-file=users
+kubectl create secret generic dashboard-users --from-file=users
 secret/dashboard-users created
 ```
 

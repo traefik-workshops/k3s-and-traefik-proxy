@@ -65,7 +65,7 @@ Its listening on the `traefik` entrypoint (port 9000), handling `/dashboard` and
 
 ## What's a TraefikService?
 
-TraefikServices are different from Kubernetes Services - it's the [CRD implementation of a Traefik Service in Kubernetes](https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/#kind-traefikservice). If the `kind` key is not specified, then the `name` defaults to a Kubernetes Service.
+TraefikServices are different from Kubernetes Services - it's the [CRD implementation of a Traefik Service in Kubernetes](https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/#kind-traefikservice). If the `kind` key is not specified in an IngressRoute, then the `name` defaults to a Kubernetes Service.
 
 We use a TraefikService to control how client requests are load balanced across backend servers, or in this case, to route to a special internal Traefik endpoint: the API.
 

@@ -10,21 +10,23 @@ This builds on the work done in the previous sections:
 
 ## What's Wrong With the Dashboard?
 
-As I alluded to earlier, our configuration is completely insecure. We're accessing data over HTTP and sending our credentials in plaintext. This just will not do. We want to wrap our communication in TLS encryption, and for that, we'll generate certificates with Let's Encrypt.
+As I alluded to earlier, our configuration is completely insecure. We're accessing data over HTTP and sending our credentials in plaintext. This just _will not do_. We want to wrap our communication in TLS encryption, and for that, we'll generate certificates with cert-manager.
 
-## How to Use Let's Encrypt?
+## Doesn't Traefik Proxy Come With Let's Encrypt Support?
 
 In the non-Kubernetes world, integration with Let's Encrypt within a container orchestrator is difficult. Traefik Labs solved this by building support for ACME certificate generation into Traefik Proxy. Certificates are stored in a file called `acme.json`, and if you think about how Docker works, storing this file on a persistent volume is easy.
 
 Traefik Proxy works the same everywhere, which means that in Kubernetes the ACME support still writes out to `acme.json`, but putting this on a PersistentVolume introduces new challenges.
 
-- Do you pin Traefik Proxy to one host by using a HostPath volume?
-- If you want to run multiple replicas, do you mount it RWX via NFS? What if you don't have an NFS server?
+- Do you pin Traefik Proxy to one host by using a Local volume?
+- If you want to run multiple replicas, can you mount it RWX via NFS? What if you don't have an NFS server?
 - Even if you do run multiple replicas, does Traefik Proxy handle file locking, or will each replica clobber the files written by the others?
 
-Traefik Proxy doesn't (yet) store certificates in Secrets, but it can read certificates _from_ Secrets in both the Ingress and IngressRoute resources.
+These are not new problems, and the solution for Kubernetes is to store each certificate in its own Secret.
 
-For that reason, and to make sure that you can spin up new replicas before shutting down the old ones, I recommend using [cert-manager](https://cert-manager.io) to generate certificates.
+Unfortunately, _because_ Traefik Proxy works the same on every orchestrator, and because every orchestrator doesn't have a Secret resource, Traefik Proxy doesn't (yet) store certificates in Secrets. It's not the end of the world, though, because it can read certificates _from_ Secrets in both the Ingress and IngressRoute resources.
+
+For that reason, and to make sure that you can spin up new replicas before shutting down the old ones, we recommend using [cert-manager](https://cert-manager.io) to generate certificates in Kubernetes.
 
 ## Set up cert-manager
 
@@ -38,14 +40,13 @@ Alternatively, you can use [cmctl](https://cert-manager.io/docs/installation/cmc
 
 ```bash
 ➤ kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.7.0/cert-manager.yaml
-
-...lots of output...
-```
+...
 namespace/cert-manager created
 serviceaccount/cert-manager-cainjector created
 serviceaccount/cert-manager created
 serviceaccount/cert-manager-webhook created
 configmap/cert-manager-webhook created
+...lots of output...
 ```
 
 Verify that cert-manager Pods are running before continuing.
@@ -60,7 +61,7 @@ cert-manager-webhook-795c6b46b-flwlm       1/1     Running   0          2m41s
 
 ## Create a ClusterIssuer
 
-A ClusterIssuer will issue certificates for any request that comes in from any namespace in the cluster. What follows is a sample ClusterIssuer for the Let's Encrypt staging environment.
+A ClusterIssuer will issue certificates for any request that comes in from any namespace in the cluster. What follows is [a sample ClusterIssuer](https://cert-manager.io/docs/configuration/acme/#creating-a-basic-acme-issuer) for the Let's Encrypt staging environment.
 
 ```yaml
 apiVersion: cert-manager.io/v1
@@ -95,7 +96,7 @@ solvers:
 - http01: {}
 ```
 
-This ClusterIssuer won't work for our environment because we're not connected to the public Internet or using routable hostnames. We could use the DNS01 resolver instead, or for the sake of this class, we can just create a ClusterIssuer for self-signed certificates.
+This ClusterIssuer won't work for our demo environment because we're not connected to the public Internet or using routable hostnames. We could use the DNS01 resolver instead, or for the sake of this class, we can just create a ClusterIssuer for self-signed certificates.
 
 ```yaml
 apiVersion: cert-manager.io/v1
@@ -116,7 +117,7 @@ clusterissuer.cert-manager.io/selfsigned created
 
 ## Generate a Certificate For the Dashboard
 
-It's possible to have certificates generated automatically through annotations on the Ingress resource, but not only are we not using an Ingress resource, we also want to have control over the resources our cluster generates. Instead of creating them automatically, we'll declare them with a Certificate resource.
+It's possible with cert-manager to have certificates generated automatically through annotations on the Ingress resource, but not only are we not using an Ingress resource, we also want to have control over the resources our cluster generates. Instead of creating them automatically, we'll declare them with a Certificate resource.
 
 ```yaml
 apiVersion: cert-manager.io/v1
@@ -132,9 +133,11 @@ spec:
   secretName: dashboard-crt
 ```
 
+> **NOTE:** Change `10.68.0.70` to your own node's IP.
+
 When we apply this, the Certificate will go through the cert-manager process, and the output will be stored in the Secret `dashboard-crt`.
 
-Using cert-manager abstracts the issuing backend from the requested resource. By changing the issuer, the same Certificate could generate a certificate from Vault, ACME (including Let's Encrypt), Venafi, AWS, FreeIPA, [and others](https://cert-manager.io/docs/configuration/external/).
+Using cert-manager abstracts the issuing backend from the requested resource. By changing the issuer, the same Certificate could generate a certificate from HashiCorp Vault, ACME (including Let's Encrypt), Venafi, AWS, FreeIPA, [and others](https://cert-manager.io/docs/configuration/external/).
 
 ```bash
 ➤ kubectl apply -f certificate.yaml
@@ -143,8 +146,8 @@ certificate.cert-manager.io/dashboard created
 
 ➤ k get secret | grep tls
 
-k3s-serving                                          kubernetes.io/tls                     2      157m
-dashboard-crt                                        kubernetes.io/tls                     3      16s
+k3s-serving                      kubernetes.io/tls                     2      157m
+dashboard-crt                    kubernetes.io/tls                     3      16s
 ```
 
 ## Add the Certificate to the IngressRoute
@@ -163,3 +166,27 @@ ingressroute.traefik.containo.us/traefik-dashboard-secure patched
 ```
 
 Now if you visit https://dashboard.traefik.$CLUSTERIP.sslip.io, you'll be greeted by a certificate warning, and after accepting that terrible risk, you'll be taken to the secured dashboard.
+
+> **PRO TIP:** If you're using a Chromium-based browser (Chrome, Vivaldi, Edge, etc.) and get an error that the certificate data is scrambled and you've been saved by the browser from a terrible fate, just type `thisisunsafe` over the browser window to force the page to load. 🤯
+
+## Add a Redirect for HTTP
+
+This is all good, but now we don't have anything listening on HTTP. Let's create a new IngressRoute and Middleware to bounce HTTP to HTTPS.
+
+```bash
+➤ kubectl apply -f middleware-scheme.yaml
+
+middleware.traefik.containo.us/redirect-permanent created
+
+➤ kubectl apply -f ingressroute.yaml
+
+ingressroute.traefik.containo.us/traefik-dashboard-http created
+```
+
+Now when you visit the dashboard over HTTP you'll be redirected to HTTPS:
+
+```bash
+➤ curl -si http://dashboard.traefik.10.68.0.70.sslip.io | head -n 1
+
+HTTP/1.1 301 Moved Permanently
+```
