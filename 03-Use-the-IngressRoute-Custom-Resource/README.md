@@ -72,7 +72,7 @@ We use a TraefikService to control how client requests are load balanced across 
 This IngressRoute is how traffic to port 9000 finds its way to the dashboard. If we remove it, the dashboard disappears, so it must be important...but much of its configuration overlaps with our own. In fact, we're sending our traffic from port 80 to port 9000, going from IngressRoute to IngressRoute only to end up at the `api@internal` service. What if we patch our IngressRoute to go directly to `api@internal` and cut out the middleman?
 
 ```bash
-➤ k patch ingressroute/traefik-dashboard-secure --type=json --patch-file patch-dashboard-service.yaml
+➤ kubectl patch ingressroute/traefik-dashboard-secure --type=json --patch-file patch-dashboard-service.yaml
 
 ingressroute.traefik.containo.us/traefik-dashboard-secure patched
 ```

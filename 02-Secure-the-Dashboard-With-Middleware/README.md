@@ -99,7 +99,7 @@ middleware.traefik.containo.us/dashboard-rewrite created
 We can now add this Middleware to the annotation, specifying `--overwrite` to tell Kubernetes to replace the existing annotation.
 
 ```
-➤ k annotate ingress traefik-dashboard \
+➤ kubectl annotate ingress traefik-dashboard \
   traefik.ingress.kubernetes.io/router.middlewares=kube-system-dashboard-rewrite@kubernetescrd,kube-system-dashboard-auth@kubernetescrd \
   --overwrite=true
 

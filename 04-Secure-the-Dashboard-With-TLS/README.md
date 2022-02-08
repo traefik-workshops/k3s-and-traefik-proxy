@@ -144,7 +144,7 @@ Using cert-manager abstracts the issuing backend from the requested resource. By
 
 certificate.cert-manager.io/dashboard created
 
-➤ k get secret | grep tls
+➤ kubectl get secret | grep tls
 
 k3s-serving                      kubernetes.io/tls                     2      157m
 dashboard-crt                    kubernetes.io/tls                     3      16s
