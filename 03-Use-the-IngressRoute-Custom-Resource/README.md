@@ -88,7 +88,7 @@ service "traefik-dashboard" deleted
 If you visit the dashboard now, you'll see that it still works fine.
 
 ```bash
-➤ curl -si -u admin@example.com:admin1234 http://dashboard.traefik.10.68.0.70.sslip.io/ | head -n 1
+➤ curl -si -u admin@example.com:admin1234 http://dashboard.traefik.$CLUSTERIP.sslip.io/ | head -n 1
 
 HTTP/1.1 200 OK
 ```
