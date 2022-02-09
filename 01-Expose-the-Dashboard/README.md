@@ -51,13 +51,6 @@ HTTP/1.1 200 OK
 
 Visit the dashboard in a browser. Look at the Routers under the HTTP section and find our Ingress. Which entrypoints is it listening on?
 
-Access it on port 443 as an HTTP request. Does it answer?
-
-```bash
-➤ curl -si http://dashboard.traefik.$CLUSTERIP.sslip.io:443/dashboard/
-HTTP/1.1 200 OK
-```
-
 ## Add the Annotations
 
 If you don't specify an entrypoint, Traefik will answer for the Ingress on all entrypoints. This usually doesn't make sense, since we have different entrypoints for a reason. To control this behavior, we'll add an annotation that tells Traefik the exact entrypoint from which we want this Ingress to be served.
