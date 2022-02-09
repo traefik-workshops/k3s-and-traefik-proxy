@@ -133,7 +133,11 @@ spec:
   secretName: dashboard-crt
 ```
 
-> **NOTE:** Change `10.68.0.70` to your own node's IP.
+> **NOTE:** Change `10.68.0.70` to your own node's IP - you can use
+
+```bash
+➤ sed -i "s/10\.68\.0\.70/${CLUSTERIP}/" certificate.yaml
+```
 
 When we apply this, the Certificate will go through the cert-manager process, and the output will be stored in the Secret `dashboard-crt`.
 
@@ -177,6 +181,8 @@ This is all good, but now we don't have anything listening on HTTP. Let's create
 ➤ kubectl apply -f middleware-scheme.yaml
 
 middleware.traefik.containo.us/redirect-permanent created
+
+➤ sed -i "s/10\.68\.0\.70/${CLUSTERIP}/" ingressroute.yaml
 
 ➤ kubectl apply -f ingressroute.yaml
 
