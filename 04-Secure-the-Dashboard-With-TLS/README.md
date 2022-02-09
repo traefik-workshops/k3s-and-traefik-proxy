@@ -186,7 +186,7 @@ ingressroute.traefik.containo.us/traefik-dashboard-http created
 Now when you visit the dashboard over HTTP you'll be redirected to HTTPS:
 
 ```bash
-➤ curl -si http://dashboard.traefik.10.68.0.70.sslip.io | head -n 1
+➤ curl -si http://dashboard.traefik.$CLUSTERIP.sslip.io | head -n 1
 
 HTTP/1.1 301 Moved Permanently
 ```
