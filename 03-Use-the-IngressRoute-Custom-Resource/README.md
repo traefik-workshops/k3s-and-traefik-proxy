@@ -22,6 +22,8 @@ ingress.networking.k8s.io "traefik-dashboard-api" deleted
 Next, create [a new IngressRoute](ingressroute.yaml) that combines both Ingresses and the middleware into a single resource.
 
 ```bash
+➤ sed -i "s/10\.68\.0\.70/${CLUSTERIP}/" ingressroute.yaml
+
 ➤ kubectl apply -f ingressroute.yaml
 
 ingressroute.traefik.containo.us/traefik-dashboard-secure created
