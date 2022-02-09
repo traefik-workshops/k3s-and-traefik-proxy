@@ -4,6 +4,18 @@
 
 Throughout these lessons we'll be using sslip.io to dynamically map a hostname to a local IP address. The IP address of my node is different from yours, so whenever possible, I'll reference a URL like: `dashboard.traefik.$CLUSTERIP.sslip.io`. For examples with `kubectl` and `curl`, this will work if you set the variable `CLUSTERIP` to the address of your cluster. For pages loaded in the browser you'll have to make that substitution yourself.
 
+To find your cluster IP, cat the kubeconfig of your cluster.
+
+```
+cat ~/.kube/config
+apiVersion: v1
+kind: Config
+clusters:
+  - name: my-cluster
+    cluster:
+      server: https://10.68.0.70:6443
+```
+
 ```bash
 # bash
 export CLUSTERIP=10.68.0.70
@@ -22,10 +34,10 @@ kubectl expose deploy/traefik -n kube-system --port=9000 --target-port=9000 --na
 
 ## Create the Ingress
 
-With the Service created, we can create an Ingress that exposes the dashboard outside of the cluster.
+With the Service created, we can create an Ingress that exposes the dashboard outside of the cluster (remember to specify namespace).
 
 ```bash
-kubectl create ingress traefik-dashboard --rule="dashboard.traefik.$CLUSTERIP.sslip.io/*=traefik-dashboard:9000"
+kubectl create ingress traefik-dashboard --rule="dashboard.traefik.$CLUSTERIP.sslip.io/*=traefik-dashboard:9000" -n kube-system
 ```
 
 ## Visit the Dashboard
@@ -49,7 +61,7 @@ HTTP/1.1 200 OK
 If you don't specify an entrypoint, Traefik will answer for the Ingress on all entrypoints. This usually doesn't make sense, since we have different entrypoints for a reason. To control this behavior, we'll add an annotation that tells Traefik the exact entrypoint from which we want this Ingress to be served.
 
 ```bash
-kubectl annotate ingress traefik-dashboard traefik.ingress.kubernetes.io/router.entrypoints=web
+kubectl annotate ingress traefik-dashboard traefik.ingress.kubernetes.io/router.entrypoints=web -n kube-system
 ```
 
 Reload the Routers page. Where is the entrypoint for the Ingress now?
