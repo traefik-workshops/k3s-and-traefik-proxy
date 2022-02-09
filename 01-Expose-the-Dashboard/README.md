@@ -4,12 +4,26 @@
 
 Throughout these lessons we'll be using sslip.io to dynamically map a hostname to a local IP address. The IP address of my node is different from yours, so whenever possible, I'll reference a URL like: `dashboard.traefik.$CLUSTERIP.sslip.io`. For examples with `kubectl` and `curl`, this will work if you set the variable `CLUSTERIP` to the address of your cluster. For pages loaded in the browser you'll have to make that substitution yourself.
 
+> **PRO TIP:** If you don't know the IP address of your cluster, you can look in your `kubectl` config file.
+
 ```bash
+grep server: $KUBECONFIG
+      server: "https://10.68.0.70:6443"
+
 # bash
 export CLUSTERIP=10.68.0.70
 
 # fish
 set -x CLUSTERIP 10.68.0.70
+```
+
+## Put Yourself Into Traefik Proxy's Namespace
+
+K3s places Traefik Proxy into the `kube-system` namespace. If you installed with Helm, it might be in `traefik-system` or a namespace of your own choosing. You can either append the namespace to all of the commands below, or you can set that namespace as part of your context.
+
+```bash
+➤ kubectl config set-context --current --namespace kube-system
+Context "demo" modified.
 ```
 
 ## Create the Service
