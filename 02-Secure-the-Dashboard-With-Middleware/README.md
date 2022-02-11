@@ -51,7 +51,7 @@ secret/dashboard-users created
 middleware.traefik.containo.us/dashboard-auth created
 ```
 
-## Apply the middleware to the Ingress
+## Apply the Middleware to the Ingress
 
 The Middleware and the Secret containing our users exist, but we have to tell Traefik to use them with the Ingress. We do that by annotating the ingress with `traefik.ingress.kubernetes.io/router.middlewares`, pointing to a list of middlware we want the Ingress to use.
 
@@ -69,7 +69,7 @@ The Middleware and the Secret containing our users exist, but we have to tell Tr
 Visit the dashboard and see that it's now secured with basic authentication:
 
 ```
-➤ curl -si http://dashboard.traefik.$CLUSTERIP.sslip.io/dashboard/
+➤ curl -si http://dashboard.traefik.$CLUSTERIP.sslip.io/dashboard/ | head -n 1
 
 HTTP/1.1 401 Unauthorized
 ```
@@ -109,7 +109,7 @@ ingress.networking.k8s.io/traefik-dashboard annotated
 ## Visit the Dashboard Host Without `/dashboard/`
 
 ```bash
-➤ curl -si http://dashboard.traefik.$CLUSTERIP.sslip.io/
+➤ curl -si http://dashboard.traefik.$CLUSTERIP.sslip.io/ | head -n 1
 HTTP/1.1 200 OK
 ```
 
